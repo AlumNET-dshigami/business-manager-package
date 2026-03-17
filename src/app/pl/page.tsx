@@ -10,8 +10,6 @@ type PLData = Record<string, Record<string, Record<string, number>>>;
 const MONTHS = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
 const EDITABLE_CATEGORIES = ["売上", "原価", "販管費"];
 const CATEGORY_LABELS: Record<string, string> = { "売上": "売上高", "原価": "売上原価", "販管費": "販売管理費" };
-const TAX_RATE = APP_CONFIG.pl.taxRate;
-const EXEC_COUNT = APP_CONFIG.pl.executiveCount;
 
 export default function PLPage() {
   const [items, setItems] = useState<PLItem[]>([]);
@@ -38,14 +36,13 @@ export default function PLPage() {
   function catRowTotal(cat: string, name: string): number { return Object.values(data[cat]?.[name] || {}).reduce((sum, v) => sum + v, 0); }
   function catTotal(cat: string): number { return Object.keys(data[cat] || {}).reduce((sum, name) => sum + catRowTotal(cat, name), 0); }
 
+  // 粗利 = 売上 - 原価
   const grossByMonth = (m: string) => catMonthTotal("売上", m) - catMonthTotal("原価", m);
   const totalGross = catTotal("売上") - catTotal("原価");
-  const taxPoolByMonth = (m: string) => { const g = grossByMonth(m); return g > 0 ? Math.round(g * TAX_RATE) : 0; };
-  const totalTaxPool = totalGross > 0 ? Math.round(totalGross * TAX_RATE) : 0;
-  const execCompByMonth = (m: string) => Math.max(0, grossByMonth(m) - catMonthTotal("販管費", m) - taxPoolByMonth(m));
-  const execPerPersonByMonth = (m: string) => Math.round(execCompByMonth(m) / EXEC_COUNT);
-  const totalExecComp = Math.max(0, totalGross - catTotal("販管費") - totalTaxPool);
-  const totalExecPerPerson = Math.round(totalExecComp / EXEC_COUNT);
+
+  // 営業利益 = 粗利 - 販管費
+  const operatingByMonth = (m: string) => grossByMonth(m) - catMonthTotal("販管費", m);
+  const totalOperating = totalGross - catTotal("販管費");
 
   function fmt(n: number): string { return n === 0 ? "-" : n.toLocaleString(); }
 
@@ -74,12 +71,11 @@ export default function PLPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
-          <SummaryCard label="総売上" value={catTotal("売上")} color="blue" />
-          <SummaryCard label="粗利" value={totalGross} color="green" />
-          <SummaryCard label="販管費" value={catTotal("販管費")} color="gray" />
-          <SummaryCard label="役員報酬(自動)" value={totalExecComp} color="purple" />
-          <SummaryCard label="営業利益(法人税プール)" value={totalTaxPool} color="orange" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          <SummaryCard label="売上高" value={catTotal("売上")} color="blue" />
+          <SummaryCard label="売上原価" value={catTotal("原価")} color="orange" />
+          <SummaryCard label="売上粗利" value={totalGross} color="green" />
+          <SummaryCard label="営業利益" value={totalOperating} color={totalOperating >= 0 ? "emerald" : "red"} />
         </div>
 
         <div className="bg-white rounded-xl border overflow-x-auto">
@@ -96,32 +92,13 @@ export default function PLPage() {
               <CategorySection cat="原価" data={data} fmt={fmt} catMonthTotal={catMonthTotal} catRowTotal={catRowTotal} catTotal={catTotal} onCellClick={(name, m) => openEditor("原価", name, m)} bgColor="bg-orange-50" autoNames={autoNamesByCat["原価"]} />
               <ComputedRow label="売上粗利" byMonth={grossByMonth} total={totalGross} bg="bg-green-50" totalBg="bg-green-100" />
               <CategorySection cat="販管費" data={data} fmt={fmt} catMonthTotal={catMonthTotal} catRowTotal={catRowTotal} catTotal={catTotal} onCellClick={(name, m) => openEditor("販管費", name, m)} bgColor="bg-purple-50" autoNames={autoNamesByCat["販管費"]} />
-
-              <tr className="bg-amber-50 font-medium border-t">
-                <td className="px-3 py-2 sticky left-0 z-10 bg-amber-50">役員報酬<span className="text-[10px] text-amber-600 ml-1">自動</span></td>
-                {MONTHS.map(m => <td key={m} className="px-2 py-2 text-right font-medium">{fmt(execCompByMonth(m))}</td>)}
-                <td className="px-3 py-2 text-right font-bold bg-gray-100">{fmt(totalExecComp)}</td>
-              </tr>
-              {APP_CONFIG.defaultUsers.map(name => (
-                <tr key={name} className="hover:bg-gray-50">
-                  <td className="px-3 py-1.5 pl-6 text-gray-600 sticky left-0 bg-white z-10">{name}</td>
-                  {MONTHS.map(m => <td key={m} className="px-2 py-1.5 text-right">{fmt(execPerPersonByMonth(m))}</td>)}
-                  <td className="px-3 py-1.5 text-right bg-gray-50 font-medium">{fmt(totalExecPerPerson)}</td>
-                </tr>
-              ))}
-
-              <tr className={`font-bold border-t-2 ${totalTaxPool >= 0 ? "bg-blue-50" : "bg-red-50"}`}>
-                <td className="px-3 py-2 sticky left-0 z-10" style={{ backgroundColor: "inherit" }}>営業利益<span className="text-[10px] text-gray-500 ml-1">＝法人税プール</span></td>
-                {MONTHS.map(m => { const v = taxPoolByMonth(m); return <td key={m} className={`px-2 py-2 text-right ${v < 0 ? "text-red-600" : ""}`}>{fmt(v)}</td>; })}
-                <td className={`px-3 py-2 text-right ${totalTaxPool < 0 ? "text-red-600 bg-red-100" : "bg-blue-100"}`}>{fmt(totalTaxPool)}</td>
-              </tr>
+              <ComputedRow label="営業利益" byMonth={operatingByMonth} total={totalOperating} bg="bg-emerald-50" totalBg="bg-emerald-100" bold />
             </tbody>
           </table>
         </div>
 
         <p className="text-xs text-gray-400 mt-3">
-          ※ 法人税プール = 粗利 × {Math.round(TAX_RATE * 100)}% ／ 役員報酬 = (粗利 - 販管費 - 法人税プール) ÷ {EXEC_COUNT}
-          <br />※ <span className="px-1 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[9px]">自動</span> = 確定案件・稼働中業務委託から自動反映
+          ※ <span className="px-1 py-0.5 bg-emerald-100 text-emerald-600 rounded text-[9px]">自動</span> = 確定案件・稼働中業務委託から自動反映
         </p>
       </div>
 
@@ -144,16 +121,16 @@ export default function PLPage() {
 }
 
 function SummaryCard({ label, value, color }: { label: string; value: number; color: string }) {
-  const colorMap: Record<string, string> = { blue: "text-blue-700", green: "text-green-700", gray: "text-gray-700", purple: "text-purple-700", orange: "text-orange-700" };
+  const colorMap: Record<string, string> = { blue: "text-blue-700", green: "text-green-700", gray: "text-gray-700", orange: "text-orange-700", emerald: "text-emerald-700", red: "text-red-600" };
   return (<div className="bg-white rounded-xl border p-4"><p className="text-[10px] text-gray-500 leading-tight">{label}</p><p className={`text-lg font-bold mt-1 ${colorMap[color] || ""}`}>{value === 0 ? "-" : `¥${value.toLocaleString()}`}</p></div>);
 }
 
-function ComputedRow({ label, byMonth, total, bg, totalBg }: { label: string; byMonth: (m: string) => number; total: number; bg: string; totalBg: string }) {
+function ComputedRow({ label, byMonth, total, bg, totalBg, bold }: { label: string; byMonth: (m: string) => number; total: number; bg: string; totalBg: string; bold?: boolean }) {
   return (
-    <tr className={`${bg} font-medium border-t-2`}>
-      <td className={`px-3 py-2 sticky left-0 z-10 ${bg}`}>{label}</td>
-      {MONTHS.map(m => { const v = byMonth(m); return <td key={m} className={`px-2 py-2 text-right ${v < 0 ? "text-red-600" : ""}`}>{v === 0 ? "-" : v.toLocaleString()}</td>; })}
-      <td className={`px-3 py-2 text-right ${totalBg} ${total < 0 ? "text-red-600" : ""}`}>{total === 0 ? "-" : total.toLocaleString()}</td>
+    <tr className={`${bg} font-medium ${bold ? "border-t-2 border-b-2" : "border-t-2"}`}>
+      <td className={`px-3 py-2 sticky left-0 z-10 ${bg} ${bold ? "font-bold" : ""}`}>{label}</td>
+      {MONTHS.map(m => { const v = byMonth(m); return <td key={m} className={`px-2 py-2 text-right ${bold ? "font-bold" : ""} ${v < 0 ? "text-red-600" : ""}`}>{v === 0 ? "-" : v.toLocaleString()}</td>; })}
+      <td className={`px-3 py-2 text-right font-bold ${totalBg} ${total < 0 ? "text-red-600" : ""}`}>{total === 0 ? "-" : total.toLocaleString()}</td>
     </tr>
   );
 }

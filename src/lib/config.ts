@@ -19,8 +19,6 @@ export const APP_CONFIG = {
 
   // PL設定
   pl: {
-    taxRate: 0.30,              // 法人税プール率（30%）
-    executiveCount: 2,          // 役員人数（報酬按分用）
     fiscalYearStartMonth: 4,    // 決算開始月（4月 = 4）
     years: ["2025", "2026", "2027"],
   },
@@ -32,7 +30,7 @@ export const APP_CONFIG = {
   },
 
   // 案件ステータス定義
-  dealStatuses: ["打診中", "商談中", "先方側で検討中", "契約準備中", "受注", "終了", "失注", "保留"],
+  dealStatuses: ["商談中", "検討中", "稼働中", "終了"],
   dealPriorities: ["高", "中", "低"],
 
   // 業務委託ステータス

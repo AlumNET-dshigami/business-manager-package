@@ -12,16 +12,16 @@ type Deal = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  "打診中": "bg-gray-100 text-gray-700", "商談中": "bg-blue-100 text-blue-700",
-  "先方側で検討中": "bg-yellow-100 text-yellow-700", "契約準備中": "bg-purple-100 text-purple-700",
-  "受注": "bg-emerald-200 text-emerald-800", "終了": "bg-slate-200 text-slate-700",
-  "失注": "bg-red-100 text-red-700", "保留": "bg-orange-100 text-orange-700",
+  "商談中": "bg-blue-100 text-blue-700",
+  "検討中": "bg-amber-100 text-amber-700",
+  "稼働中": "bg-emerald-100 text-emerald-700",
+  "終了": "bg-gray-200 text-gray-600",
 };
 
 const PRIORITY_DOTS: Record<string, string> = { "高": "bg-red-500", "中": "bg-yellow-500", "低": "bg-gray-400" };
 
 const emptyDeal = (): Partial<Deal> => ({
-  担当者: APP_CONFIG.defaultUsers[0], 企業名: "", 属性: "", 進捗状況: "商談中",
+  担当者: APP_CONFIG.defaultUsers[0], 企業名: "", 属性: "", 進捗状況: "商談中" as string,
   次アクション: "", 優先度: "中", 提出資料: 0, 見積もり: 0, 発注書: 0, 契約書: 0, 備考: "",
   月額売上: 0, 月額原価: 0, 契約開始月: "", 契約終了月: "", 確定: 0,
 });
@@ -57,7 +57,7 @@ export default function DealsPage() {
     fetchDeals();
   }
 
-  const activeDeals = deals.filter(d => d.進捗状況 === "受注");
+  const activeDeals = deals.filter(d => d.進捗状況 === "稼働中");
   const totalRevenue = activeDeals.reduce((s, d) => s + (d.月額売上 || 0), 0);
   const totalCost = activeDeals.reduce((s, d) => s + (d.月額原価 || 0), 0);
 
@@ -96,9 +96,9 @@ export default function DealsPage() {
 }
 
 function BoardView({ deals, onEdit }: { deals: Deal[]; onEdit: (d: Deal) => void }) {
-  const columns = APP_CONFIG.dealStatuses.filter(s => deals.some(d => d.進捗状況 === s) || ["商談中", "先方側で検討中", "受注", "終了"].includes(s));
+  const columns = APP_CONFIG.dealStatuses;
   return (
-    <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${Math.min(columns.length, 5)}, minmax(0, 1fr))` }}>
+    <div className="grid gap-4 grid-cols-4">
       {columns.map((status) => {
         const col = deals.filter((d) => d.進捗状況 === status);
         return (
@@ -118,7 +118,12 @@ function BoardView({ deals, onEdit }: { deals: Deal[]; onEdit: (d: Deal) => void
                     <span className={`w-2 h-2 rounded-full mt-1 ${PRIORITY_DOTS[deal.優先度] || ""}`} />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">{deal.属性}</p>
-                  {deal.確定 && deal.月額売上 ? <p className="text-xs text-blue-600 mt-1 font-medium">{fmt(deal.月額売上)}/月</p> : null}
+                  {deal.月額売上 ? (
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-sm text-blue-600 font-bold">{fmt(deal.月額売上)}<span className="text-xs font-normal">/月</span></p>
+                      {deal.月額原価 ? <p className="text-xs text-gray-400">原価 {fmt(deal.月額原価)}</p> : null}
+                    </div>
+                  ) : null}
                   {deal.次アクション && <p className="text-xs text-gray-600 mt-2 line-clamp-2">{deal.次アクション}</p>}
                   <div className="flex items-center gap-1 mt-2">
                     <span className="text-xs text-gray-400">{deal.担当者}</span>
@@ -194,7 +199,7 @@ function DealModal({ deal, onChange, onSave, onClose, onDelete }: {
             <span className={`text-sm font-medium ${deal.確定 ? "text-emerald-600" : "text-gray-400"}`}>PL確定</span>
             <div className="relative">
               <input type="checkbox" className="sr-only" checked={!!deal.確定}
-                onChange={(e) => onChange({ ...deal, 確定: e.target.checked ? 1 : 0, 進捗状況: e.target.checked ? "受注" : (["受注", "終了"].includes(deal.進捗状況 || "") ? "契約準備中" : deal.進捗状況) })} />
+                onChange={(e) => onChange({ ...deal, 確定: e.target.checked ? 1 : 0, 進捗状況: e.target.checked ? "稼働中" : (["稼働中", "終了"].includes(deal.進捗状況 || "") ? "検討中" : deal.進捗状況) })} />
               <div className={`w-10 h-5 rounded-full transition ${deal.確定 ? "bg-emerald-500" : "bg-gray-300"}`} />
               <div className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${deal.確定 ? "translate-x-5" : ""}`} />
             </div>
