@@ -1,0 +1,29 @@
+{
+  "name": "business-manager",
+  "version": "1.0.0",
+  "description": "Business Manager - 案件管理・PL管理・請求書・クライアント管理パッケージ",
+  "scripts": {
+    "dev": "next dev --turbopack --port 3000",
+    "build": "next build",
+    "start": "next start",
+    "seed": "npx tsx src/app/api/seed/run.ts"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.17.0",
+    "bcryptjs": "^3.0.3",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
+    "next": "^16.1.6",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^25.5.0",
+    "@types/react": "^19.2.14",
+    "postcss": "^8.5.8",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3"
+  }
+}
