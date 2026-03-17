@@ -44,6 +44,15 @@ export default function PLPage() {
   const operatingByMonth = (m: string) => grossByMonth(m) - catMonthTotal("販管費", m);
   const totalOperating = totalGross - catTotal("販管費");
 
+  // 率の計算
+  const pct = (num: number, den: number) => den === 0 ? 0 : (num / den) * 100;
+  const costRateByMonth = (m: string) => pct(catMonthTotal("原価", m), catMonthTotal("売上", m));
+  const grossRateByMonth = (m: string) => pct(grossByMonth(m), catMonthTotal("売上", m));
+  const opRateByMonth = (m: string) => pct(operatingByMonth(m), catMonthTotal("売上", m));
+  const totalCostRate = pct(catTotal("原価"), catTotal("売上"));
+  const totalGrossRate = pct(totalGross, catTotal("売上"));
+  const totalOpRate = pct(totalOperating, catTotal("売上"));
+
   function fmt(n: number): string { return n === 0 ? "-" : n.toLocaleString(); }
 
   async function savePLItem() {
@@ -73,9 +82,9 @@ export default function PLPage() {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <SummaryCard label="売上高" value={catTotal("売上")} color="blue" />
-          <SummaryCard label="売上原価" value={catTotal("原価")} color="orange" />
-          <SummaryCard label="売上粗利" value={totalGross} color="green" />
-          <SummaryCard label="営業利益" value={totalOperating} color={totalOperating >= 0 ? "emerald" : "red"} />
+          <SummaryCard label="売上原価" value={catTotal("原価")} color="orange" rate={totalCostRate} rateLabel="原価率" />
+          <SummaryCard label="売上粗利" value={totalGross} color="green" rate={totalGrossRate} rateLabel="粗利率" />
+          <SummaryCard label="営業利益" value={totalOperating} color={totalOperating >= 0 ? "emerald" : "red"} rate={totalOpRate} rateLabel="利益率" />
         </div>
 
         <div className="bg-white rounded-xl border overflow-x-auto">
@@ -90,9 +99,12 @@ export default function PLPage() {
             <tbody>
               <CategorySection cat="売上" data={data} fmt={fmt} catMonthTotal={catMonthTotal} catRowTotal={catRowTotal} catTotal={catTotal} onCellClick={(name, m) => openEditor("売上", name, m)} bgColor="bg-blue-50" autoNames={autoNamesByCat["売上"]} />
               <CategorySection cat="原価" data={data} fmt={fmt} catMonthTotal={catMonthTotal} catRowTotal={catRowTotal} catTotal={catTotal} onCellClick={(name, m) => openEditor("原価", name, m)} bgColor="bg-orange-50" autoNames={autoNamesByCat["原価"]} />
+              <RateRow label="原価率" byMonth={costRateByMonth} total={totalCostRate} />
               <ComputedRow label="売上粗利" byMonth={grossByMonth} total={totalGross} bg="bg-green-50" totalBg="bg-green-100" />
+              <RateRow label="粗利率" byMonth={grossRateByMonth} total={totalGrossRate} good />
               <CategorySection cat="販管費" data={data} fmt={fmt} catMonthTotal={catMonthTotal} catRowTotal={catRowTotal} catTotal={catTotal} onCellClick={(name, m) => openEditor("販管費", name, m)} bgColor="bg-purple-50" autoNames={autoNamesByCat["販管費"]} />
               <ComputedRow label="営業利益" byMonth={operatingByMonth} total={totalOperating} bg="bg-emerald-50" totalBg="bg-emerald-100" bold />
+              <RateRow label="営業利益率" byMonth={opRateByMonth} total={totalOpRate} good bold />
             </tbody>
           </table>
         </div>
@@ -120,9 +132,17 @@ export default function PLPage() {
   );
 }
 
-function SummaryCard({ label, value, color }: { label: string; value: number; color: string }) {
+function SummaryCard({ label, value, color, rate, rateLabel }: { label: string; value: number; color: string; rate?: number; rateLabel?: string }) {
   const colorMap: Record<string, string> = { blue: "text-blue-700", green: "text-green-700", gray: "text-gray-700", orange: "text-orange-700", emerald: "text-emerald-700", red: "text-red-600" };
-  return (<div className="bg-white rounded-xl border p-4"><p className="text-[10px] text-gray-500 leading-tight">{label}</p><p className={`text-lg font-bold mt-1 ${colorMap[color] || ""}`}>{value === 0 ? "-" : `¥${value.toLocaleString()}`}</p></div>);
+  return (
+    <div className="bg-white rounded-xl border p-4">
+      <p className="text-[10px] text-gray-500 leading-tight">{label}</p>
+      <p className={`text-lg font-bold mt-1 ${colorMap[color] || ""}`}>{value === 0 ? "-" : `¥${value.toLocaleString()}`}</p>
+      {rate !== undefined && rateLabel && (
+        <p className="text-[11px] text-gray-500 mt-1">{rateLabel} <span className={`font-semibold ${colorMap[color] || ""}`}>{rate.toFixed(1)}%</span></p>
+      )}
+    </div>
+  );
 }
 
 function ComputedRow({ label, byMonth, total, bg, totalBg, bold }: { label: string; byMonth: (m: string) => number; total: number; bg: string; totalBg: string; bold?: boolean }) {
@@ -131,6 +151,18 @@ function ComputedRow({ label, byMonth, total, bg, totalBg, bold }: { label: stri
       <td className={`px-3 py-2 sticky left-0 z-10 ${bg} ${bold ? "font-bold" : ""}`}>{label}</td>
       {MONTHS.map(m => { const v = byMonth(m); return <td key={m} className={`px-2 py-2 text-right ${bold ? "font-bold" : ""} ${v < 0 ? "text-red-600" : ""}`}>{v === 0 ? "-" : v.toLocaleString()}</td>; })}
       <td className={`px-3 py-2 text-right font-bold ${totalBg} ${total < 0 ? "text-red-600" : ""}`}>{total === 0 ? "-" : total.toLocaleString()}</td>
+    </tr>
+  );
+}
+
+function RateRow({ label, byMonth, total, good, bold }: { label: string; byMonth: (m: string) => number; total: number; good?: boolean; bold?: boolean }) {
+  const fmtPct = (v: number) => v === 0 ? "-" : `${v.toFixed(1)}%`;
+  const color = good ? "text-emerald-600" : "text-orange-600";
+  return (
+    <tr className={`bg-gray-50/50 ${bold ? "border-b-2" : ""}`}>
+      <td className={`px-3 py-1 pl-6 sticky left-0 z-10 bg-gray-50/50 text-[10px] ${color} ${bold ? "font-bold" : "font-medium"}`}>{label}</td>
+      {MONTHS.map(m => <td key={m} className={`px-2 py-1 text-right text-[10px] ${color} ${bold ? "font-bold" : ""}`}>{fmtPct(byMonth(m))}</td>)}
+      <td className={`px-3 py-1 text-right text-[10px] font-bold bg-gray-100 ${color}`}>{fmtPct(total)}</td>
     </tr>
   );
 }
