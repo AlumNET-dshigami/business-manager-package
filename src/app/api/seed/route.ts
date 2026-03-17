@@ -62,28 +62,24 @@ export async function POST() {
     { sql: ctSQL, args: ["西田 優", "", "インフラエンジニア", "2025-04-01", "2025-12-31", 550000, "月160h", "nishida@infra.jp", "080-7890-1234", "休止中", "AWS/Terraform。次案件待ち"] },
   ]);
 
-  // ========== アサイン（業務委託を案件に紐付け：14件）==========
+  // ========== アサイン（業務委託を案件に紐付け）==========
+  // contractor IDsを動的に取得（AUTO_INCREMENTのずれ対策）
+  const ctRows = await dbAll("SELECT id FROM contractors ORDER BY id");
+  const ctIds = ctRows.map((r) => Number(r.id));
+  // ctIds[0]=山本, [1]=中村, [2]=松田, [3]=林, [4]=斎藤, [5]=高木, [6]=藤井, [7]=大野, [8]=原田, [9]=石川, [10]=田村, [11]=西田
+
   const asSQL = "INSERT INTO contractor_assignments (contractor_id, 案件名, 月額単価, 契約開始月, 契約終了月, PL表示名, PLカテゴリ, 備考) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
   await dbBatch([
-    // 丸紅ロジ 物流DX（3名体制）
-    { sql: asSQL, args: [1, "丸紅ロジ 物流DX", 650000, "2025-04", "2026-03", "", "原価", "フルスタック開発"] },
-    // リクルートMKT MA導入
-    { sql: asSQL, args: [2, "リクルートMKT MA導入", 500000, "2025-07", "2026-06", "", "原価", "UI/UX設計"] },
-    // AGC 基幹システム刷新（5名体制・うち外注2名）
-    { sql: asSQL, args: [3, "AGC 基幹システム刷新", 800000, "2025-10", "2026-09", "", "原価", "SAP移行コンサル"] },
-    // MS海上 データ分析基盤
-    { sql: asSQL, args: [4, "MS海上 データ分析基盤", 600000, "2026-01", "2026-12", "", "原価", "データ基盤構築"] },
-    // NTTデータ関西 PMO（4名常駐・うち外注2名）
-    { sql: asSQL, args: [5, "NTTデータ関西 PMO", 450000, "2025-06", "2026-03", "", "原価", "PMO支援"] },
-    { sql: asSQL, args: [10, "NTTデータ関西 PMO", 500000, "2025-06", "2026-03", "", "原価", "PMOコンサル"] },
-    // KDDI セキュリティ監査
-    { sql: asSQL, args: [6, "KDDI セキュリティ監査", 700000, "2026-01", "2026-06", "", "原価", "セキュリティ診断"] },
-    // 丸紅ロジ WMS開発（2名体制）
-    { sql: asSQL, args: [7, "丸紅ロジ WMS開発", 600000, "2025-10", "2026-06", "", "原価", "バックエンド開発"] },
-    // アサヒ EC運用保守
-    { sql: asSQL, args: [8, "アサヒ EC運用保守", 500000, "2025-10", "2026-09", "", "原価", "EC開発・保守"] },
-    // MS海上 RPA導入
-    { sql: asSQL, args: [9, "MS海上 RPA導入", 550000, "2025-07", "2026-06", "", "原価", "UiPathロボット開発"] },
+    { sql: asSQL, args: [ctIds[0], "丸紅ロジ 物流DX", 650000, "2025-04", "2026-03", "", "原価", "フルスタック開発"] },
+    { sql: asSQL, args: [ctIds[1], "リクルートMKT MA導入", 500000, "2025-07", "2026-06", "", "原価", "UI/UX設計"] },
+    { sql: asSQL, args: [ctIds[2], "AGC 基幹システム刷新", 800000, "2025-10", "2026-09", "", "原価", "SAP移行コンサル"] },
+    { sql: asSQL, args: [ctIds[3], "MS海上 データ分析基盤", 600000, "2026-01", "2026-12", "", "原価", "データ基盤構築"] },
+    { sql: asSQL, args: [ctIds[4], "NTTデータ関西 PMO", 450000, "2025-06", "2026-03", "", "原価", "PMO支援"] },
+    { sql: asSQL, args: [ctIds[9], "NTTデータ関西 PMO", 500000, "2025-06", "2026-03", "", "原価", "PMOコンサル"] },
+    { sql: asSQL, args: [ctIds[5], "KDDI セキュリティ監査", 700000, "2026-01", "2026-06", "", "原価", "セキュリティ診断"] },
+    { sql: asSQL, args: [ctIds[6], "丸紅ロジ WMS開発", 600000, "2025-10", "2026-06", "", "原価", "バックエンド開発"] },
+    { sql: asSQL, args: [ctIds[7], "アサヒ EC運用保守", 500000, "2025-10", "2026-09", "", "原価", "EC開発・保守"] },
+    { sql: asSQL, args: [ctIds[8], "MS海上 RPA導入", 550000, "2025-07", "2026-06", "", "原価", "UiPathロボット開発"] },
   ]);
 
   // ========== 経費 ==========
@@ -126,20 +122,33 @@ export async function POST() {
   ]);
 
   // ========== 請求書（3件：発行済/入金済/下書き） ==========
+  // deal/client IDsを動的に取得
+  const dealRows = await dbAll("SELECT id FROM deals ORDER BY id");
+  const dealIds = dealRows.map((r) => Number(r.id));
+  const clientRows = await dbAll("SELECT id FROM clients ORDER BY id");
+  const clientIds = clientRows.map((r) => Number(r.id));
+
   const invSQL = "INSERT INTO invoices (invoice_no, deal_id, client_id, 件名, 発行日, 支払期限, ステータス, 小計, 税率, 税額, 合計, 備考) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   const itemSQL = "INSERT INTO invoice_items (invoice_id, 項目名, 数量, 単価, 金額) VALUES (?, ?, ?, ?, ?)";
 
-  await dbRun(invSQL, ["INV-20260201-001", 1, 1, "物流DXコンサルティング 2026年2月分", "2026-02-28", "2026-03-31", "入金済", 1500000, 0.1, 150000, 1650000, ""]);
-  await dbRun(itemSQL, [1, "物流DXコンサルティング業務", 1, 1200000, 1200000]);
-  await dbRun(itemSQL, [1, "開発作業費", 1, 300000, 300000]);
+  await dbRun(invSQL, ["INV-20260201-001", dealIds[0], clientIds[0], "物流DXコンサルティング 2026年2月分", "2026-02-28", "2026-03-31", "入金済", 1500000, 0.1, 150000, 1650000, ""]);
+  // invoice IDsも動的に取得
+  const inv1Rows = await dbAll("SELECT id FROM invoices WHERE invoice_no = 'INV-20260201-001'");
+  const inv1Id = Number(inv1Rows[0].id);
+  await dbRun(itemSQL, [inv1Id, "物流DXコンサルティング業務", 1, 1200000, 1200000]);
+  await dbRun(itemSQL, [inv1Id, "開発作業費", 1, 300000, 300000]);
 
-  await dbRun(invSQL, ["INV-20260301-001", 1, 1, "物流DXコンサルティング 2026年3月分", "2026-03-01", "2026-03-31", "発行済", 1500000, 0.1, 150000, 1650000, ""]);
-  await dbRun(itemSQL, [2, "物流DXコンサルティング業務", 1, 1200000, 1200000]);
-  await dbRun(itemSQL, [2, "開発作業費", 1, 300000, 300000]);
+  await dbRun(invSQL, ["INV-20260301-001", dealIds[0], clientIds[0], "物流DXコンサルティング 2026年3月分", "2026-03-01", "2026-03-31", "発行済", 1500000, 0.1, 150000, 1650000, ""]);
+  const inv2Rows = await dbAll("SELECT id FROM invoices WHERE invoice_no = 'INV-20260301-001'");
+  const inv2Id = Number(inv2Rows[0].id);
+  await dbRun(itemSQL, [inv2Id, "物流DXコンサルティング業務", 1, 1200000, 1200000]);
+  await dbRun(itemSQL, [inv2Id, "開発作業費", 1, 300000, 300000]);
 
-  await dbRun(invSQL, ["INV-20260301-002", 3, 3, "基幹システム刷新 2026年3月分", "2026-03-01", "2026-03-31", "下書き", 2000000, 0.1, 200000, 2200000, "要件定義フェーズ2"]);
-  await dbRun(itemSQL, [3, "システム設計・開発業務", 1, 1500000, 1500000]);
-  await dbRun(itemSQL, [3, "プロジェクト管理費", 1, 500000, 500000]);
+  await dbRun(invSQL, ["INV-20260301-002", dealIds[2], clientIds[2], "基幹システム刷新 2026年3月分", "2026-03-01", "2026-03-31", "下書き", 2000000, 0.1, 200000, 2200000, "要件定義フェーズ2"]);
+  const inv3Rows = await dbAll("SELECT id FROM invoices WHERE invoice_no = 'INV-20260301-002'");
+  const inv3Id = Number(inv3Rows[0].id);
+  await dbRun(itemSQL, [inv3Id, "システム設計・開発業務", 1, 1500000, 1500000]);
+  await dbRun(itemSQL, [inv3Id, "プロジェクト管理費", 1, 500000, 500000]);
 
   return NextResponse.json({ message: "デモデータを投入しました", ok: true });
 }
