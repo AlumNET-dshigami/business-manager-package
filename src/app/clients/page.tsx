@@ -34,14 +34,14 @@ export default function ClientsPage() {
               <input type="text" placeholder="企業名・担当者名で検索..." value={search} onChange={(e) => setSearch(e.target.value)} className="border rounded-lg px-3 py-1.5 text-sm w-64" />
               <button onClick={() => setEditing({ 企業名: "", 担当者名: "", メール: "", 電話番号: "", 住所: "", 備考: "" })} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm hover:bg-blue-700">+ 新規</button>
             </>) : (
-              <input type="text" placeholder="氏名・企業名・スキルで検索..." value={alumniSearch} onChange={(e) => setAlumniSearch(e.target.value)} className="border rounded-lg px-3 py-1.5 text-sm w-64" />
+              <input type="text" placeholder="企業名・事業領域で検索..." value={alumniSearch} onChange={(e) => setAlumniSearch(e.target.value)} className="border rounded-lg px-3 py-1.5 text-sm w-64" />
             )}
           </div>
         </div>
 
         <div className="flex gap-1 mb-4 border-b">
           <button onClick={() => setTab("clients")} className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition ${tab === "clients" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}>クライアント企業 ({clients.length})</button>
-          <button onClick={() => setTab("alumni")} className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition ${tab === "alumni" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}>人材ネットワーク ({alumni.length})</button>
+          <button onClick={() => setTab("alumni")} className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition ${tab === "alumni" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}>パートナー企業 ({alumni.length})</button>
         </div>
 
         {tab === "clients" ? (
@@ -62,17 +62,17 @@ export default function ClientsPage() {
         ) : (
           <div className="bg-white rounded-xl border overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left"><tr><th className="px-4 py-3 font-medium">氏名</th><th className="px-4 py-3 font-medium">企業名</th><th className="px-4 py-3 font-medium">役職</th><th className="px-4 py-3 font-medium">スキル</th><th className="px-4 py-3 font-medium">メール</th><th className="px-4 py-3 font-medium">ステータス</th></tr></thead>
+              <thead className="bg-gray-50 text-left"><tr><th className="px-4 py-3 font-medium">企業名</th><th className="px-4 py-3 font-medium">担当者</th><th className="px-4 py-3 font-medium">役職</th><th className="px-4 py-3 font-medium">事業領域</th><th className="px-4 py-3 font-medium">メール</th><th className="px-4 py-3 font-medium">ステータス</th></tr></thead>
               <tbody className="divide-y">
                 {alumni.map((a) => (
                   <tr key={a.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium">{a.氏名}</td><td className="px-4 py-3 text-gray-600">{a.企業名}</td><td className="px-4 py-3 text-gray-600">{a.役職}</td><td className="px-4 py-3 text-gray-600 max-w-48 truncate">{a.スキル}</td><td className="px-4 py-3 text-gray-600">{a.メール}</td>
+                    <td className="px-4 py-3 font-medium">{a.企業名}</td><td className="px-4 py-3 text-gray-600">{a.氏名}</td><td className="px-4 py-3 text-gray-600">{a.役職}</td><td className="px-4 py-3 text-gray-600 max-w-48 truncate">{a.スキル}</td><td className="px-4 py-3 text-gray-600">{a.メール}</td>
                     <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${a.ステータス === "アクティブ" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>{a.ステータス}</span></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {alumni.length === 0 && <p className="text-center text-gray-400 py-12">人材がいません</p>}
+            {alumni.length === 0 && <p className="text-center text-gray-400 py-12">パートナー企業がありません</p>}
           </div>
         )}
       </div>

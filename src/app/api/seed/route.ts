@@ -7,16 +7,28 @@ export async function POST() {
     return NextResponse.json({ message: "データは既に投入されています", skipped: true });
   }
 
-  // ========== クライアント（8社） ==========
+  // ========== クライアント（18社） ==========
+  const clSQL = "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)";
   await dbBatch([
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["丸紅ロジスティクス株式会社", "佐藤 太郎", "sato@marubeni-logi.co.jp", "03-1234-5678", "東京都千代田区大手町1-4-2", "物流DX案件"] },
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["株式会社リクルートMKT", "鈴木 花子", "suzuki@recruit-mkt.co.jp", "03-2345-6789", "東京都千代田区丸の内1-9-2", "マーケ支援"] },
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["AGCテクノグラス株式会社", "田中 一郎", "tanaka@agc-techno.co.jp", "06-3456-7890", "大阪府大阪市北区中之島3-3-3", "基幹システム"] },
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["三井住友海上火災保険株式会社", "山田 美咲", "yamada@ms-ins.co.jp", "03-4567-8901", "東京都千代田区神田駿河台3-9", ""] },
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["株式会社NTTデータ関西", "高橋 健太", "takahashi@nttdata-kansai.co.jp", "06-6345-6789", "大阪府大阪市北区堂島浜1-2-1", "西日本拠点"] },
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["KDDI株式会社", "中村 翔", "nakamura@kddi.com", "03-6678-9012", "東京都千代田区飯田橋3-10-10", "通信インフラ"] },
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["ソニーグループ株式会社", "木村 恵子", "kimura@sony.com", "03-7789-0123", "東京都港区港南1-7-1", "新規開拓中"] },
-    { sql: "INSERT INTO clients (企業名, 担当者名, メール, 電話番号, 住所, 備考) VALUES (?, ?, ?, ?, ?, ?)", args: ["アサヒグループ食品株式会社", "伊藤 正", "ito@asahi-gf.co.jp", "03-8890-1234", "東京都墨田区吾妻橋1-23-1", "EC構築"] },
+    { sql: clSQL, args: ["丸紅ロジスティクス株式会社", "佐藤 太郎", "sato@marubeni-logi.co.jp", "03-1234-5678", "東京都千代田区大手町1-4-2", "物流DX案件"] },
+    { sql: clSQL, args: ["株式会社リクルートMKT", "鈴木 花子", "suzuki@recruit-mkt.co.jp", "03-2345-6789", "東京都千代田区丸の内1-9-2", "マーケ支援"] },
+    { sql: clSQL, args: ["AGCテクノグラス株式会社", "田中 一郎", "tanaka@agc-techno.co.jp", "06-3456-7890", "大阪府大阪市北区中之島3-3-3", "基幹システム"] },
+    { sql: clSQL, args: ["三井住友海上火災保険株式会社", "山田 美咲", "yamada@ms-ins.co.jp", "03-4567-8901", "東京都千代田区神田駿河台3-9", ""] },
+    { sql: clSQL, args: ["株式会社NTTデータ関西", "高橋 健太", "takahashi@nttdata-kansai.co.jp", "06-6345-6789", "大阪府大阪市北区堂島浜1-2-1", "西日本拠点"] },
+    { sql: clSQL, args: ["KDDI株式会社", "中村 翔", "nakamura@kddi.com", "03-6678-9012", "東京都千代田区飯田橋3-10-10", "通信インフラ"] },
+    { sql: clSQL, args: ["ソニーグループ株式会社", "木村 恵子", "kimura@sony.com", "03-7789-0123", "東京都港区港南1-7-1", "新規開拓中"] },
+    { sql: clSQL, args: ["アサヒグループ食品株式会社", "伊藤 正", "ito@asahi-gf.co.jp", "03-8890-1234", "東京都墨田区吾妻橋1-23-1", "EC構築"] },
+    // 追加10社
+    { sql: clSQL, args: ["住友商事株式会社", "松本 剛", "matsumoto@sumitomocorp.com", "03-5166-3000", "東京都千代田区大手町2-3-2", "商社DX"] },
+    { sql: clSQL, args: ["株式会社日立製作所", "小川 真理", "ogawa@hitachi.com", "03-3258-1111", "東京都千代田区丸の内1-6-6", "製造IoT"] },
+    { sql: clSQL, args: ["オリックス株式会社", "加藤 裕介", "kato@orix.co.jp", "03-3435-3000", "東京都港区浜松町2-4-1", "金融システム"] },
+    { sql: clSQL, args: ["株式会社セブン&アイHD", "渡辺 直子", "watanabe@7andi.com", "03-6238-3000", "東京都千代田区二番町8-8", "小売DX"] },
+    { sql: clSQL, args: ["大和ハウス工業株式会社", "森田 健二", "morita@daiwahouse.jp", "06-6342-1400", "大阪府大阪市北区梅田3-3-5", "建設BIM"] },
+    { sql: clSQL, args: ["東京海上日動火災保険株式会社", "藤原 美穂", "fujiwara@tokiomarine.co.jp", "03-3212-6211", "東京都千代田区丸の内1-2-1", "保険DX"] },
+    { sql: clSQL, args: ["パナソニックコネクト株式会社", "吉村 大介", "yoshimura@connect.panasonic.com", "06-6908-1121", "大阪府門真市大字門真1006", "SCM改革"] },
+    { sql: clSQL, args: ["三菱UFJニコス株式会社", "石井 智子", "ishii@cr.mufg.jp", "03-3514-4300", "東京都千代田区外神田4-14-1", "決済基盤"] },
+    { sql: clSQL, args: ["株式会社ベネッセHD", "中島 慎吾", "nakajima@benesse.co.jp", "086-225-1100", "岡山県岡山市北区南方3-7-17", "EdTech"] },
+    { sql: clSQL, args: ["JFEスチール株式会社", "大塚 隆", "otsuka@jfe-steel.co.jp", "03-3597-4321", "東京都千代田区内幸町2-2-3", "製鉄DX"] },
   ]);
 
   // ==========================================================================
@@ -130,15 +142,14 @@ export async function POST() {
     { sql: exSQL, args: ["採用・広告費", 60000, "2025-04", "", "販管費", "広告宣伝費", "Wantedly/媒体"] },
   ]);
 
-  // ========== 人材ネットワーク（6名） ==========
+  // ========== パートナー企業（5社） ==========
   const alSQL = "INSERT INTO alumni (氏名, 企業名, 役職, メール, 電話番号, スキル, ステータス, facebook_url, 備考) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
   await dbBatch([
-    { sql: alSQL, args: ["佐々木 太一", "アクセンチュア株式会社", "マネジャー", "sasaki@accenture.com", "03-1111-2222", "DX戦略, PMO, SAP", "アクティブ", "", "前職同僚。案件紹介可"] },
-    { sql: alSQL, args: ["木村 恵子", "パーソルキャリア株式会社", "部長", "kimura@persol.co.jp", "", "人事, 採用, 組織開発", "アクティブ", "", "人材紹介連携"] },
-    { sql: alSQL, args: ["渡辺 翔太", "AWS Japan", "ソリューションアーキテクト", "watanabe@amazon.com", "090-7777-8888", "AWS, クラウド設計, IaC", "アクティブ", "", "技術相談可"] },
-    { sql: alSQL, args: ["伊藤 真理", "デロイトトーマツ", "シニアマネジャー", "ito@deloitte.com", "03-9999-0000", "監査, 内部統制, ISMS", "候補", "", "セキュリティ案件で連携可能性"] },
-    { sql: alSQL, args: ["小林 健太", "サイバーエージェント", "テックリード", "kobayashi@cyberagent.co.jp", "090-2222-3333", "React, TypeScript, Next.js", "アクティブ", "", "エンジニア紹介可"] },
-    { sql: alSQL, args: ["吉田 美穂", "PwCコンサルティング", "ディレクター", "yoshida@pwc.com", "", "戦略コンサル, M&A, DD", "休眠", "", ""] },
+    { sql: alSQL, args: ["西村 大輔", "株式会社テクノブリッジ", "代表取締役", "nishimura@technobridge.co.jp", "03-5500-1234", "SES, エンジニア派遣, PMO支援", "アクティブ", "", "エンジニア調達の主要パートナー。常時50名以上のエンジニアプール"] },
+    { sql: alSQL, args: ["金子 理恵", "エムスリーキャリア株式会社", "営業部長", "kaneko@m3career.co.jp", "03-6229-8000", "人材紹介, ヘッドハンティング, RPO", "アクティブ", "", "ハイクラスIT人材の紹介。成功報酬型"] },
+    { sql: alSQL, args: ["坂本 浩一", "株式会社デジタルシフト", "取締役COO", "sakamoto@digitalshift.co.jp", "03-6455-3200", "DXコンサル, クラウド移行, データ基盤", "アクティブ", "", "大手向けDX案件の共同提案パートナー。共同受注実績5件"] },
+    { sql: alSQL, args: ["長谷川 真", "クラウドフォース株式会社", "パートナー営業部長", "hasegawa@cloudforce.jp", "06-6300-8800", "AWS/Azure構築, IaC, セキュリティ監査", "アクティブ", "", "クラウドインフラ案件の技術パートナー。AWS APNセレクト"] },
+    { sql: alSQL, args: ["池田 奈々", "株式会社クリエイティブワークス", "代表", "ikeda@creativeworks.jp", "03-3780-5500", "UI/UXデザイン, ブランディング, Web制作", "アクティブ", "", "デザイン・フロントエンド案件の外注先。レスポンス早い"] },
   ]);
 
   // ========== 請求書（3件：発行済/入金済/下書き） ==========
